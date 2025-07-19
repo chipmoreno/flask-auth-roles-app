@@ -57,17 +57,29 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        print("Already authenticated, redirecting to index.")
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
+        print("Form validated.")
         user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            print(f"User found: {user.username}")
+        else:
+            print("User not found.")
         if user and user.check_password(form.password.data):
+            print("Password correct, logging in.")
             login_user(user)
             flash('Logged in successfully!', 'success')
             next_page = request.args.get('next')
+            print(f"Redirecting to: {next_page or url_for('index')}")
             return redirect(next_page or url_for('index'))
         else:
+            print("Invalid username or password.")
             flash('Invalid username or password', 'danger')
+    else:
+        if request.method == 'POST':
+            print("Form did not validate.")
     return render_template('login.html', form=form)
 
 @app.route('/logout')
