@@ -1,0 +1,58 @@
+<!-- app/templates/base.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if title %}
+    <title>{{ title }} - DirectoryApp</title>
+    {% else %}
+    <title>Welcome to DirectoryApp</title>
+    {% endif %}
+    <!-- You might want to add a link to a CSS framework like Bootstrap later -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <!-- FIXED: The homepage link now points to 'main.index' -->
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">DirectoryApp</a>
+            <div class="navbar-nav">
+                <!-- Logic to show links based on login status -->
+                {% if current_user.is_authenticated %}
+                    <!-- FIXED: The profile link now points to 'main.profile' -->
+                    <a class="nav-item nav-link" href="{{ url_for('main.profile') }}">Profile</a>
+                    <!-- FIXED: The logout link now points to 'auth.logout' -->
+                    <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                {% else %}
+                    <!-- FIXED: The login link now points to 'auth.login' -->
+                    <a class="nav-item nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    <!-- FIXED: The register link now points to 'auth.register' -->
+                    <a class="nav-item nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <!-- This is where content from other pages will be inserted -->
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

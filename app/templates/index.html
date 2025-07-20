@@ -1,0 +1,21 @@
+<!-- NEW and CORRECTED app/templates/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome to DirectoryApp!</h1>
+        <p class="lead">Your one-stop place for connecting with the community.</p>
+        <hr class="my-4">
+        
+        <!-- Logic to show different content based on login status -->
+        {% if current_user.is_authenticated %}
+            <p>Welcome back, {{ current_user.username }}! Ready to explore?</p>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('main.profile') }}" role="button">Go to Your Profile</a>
+        {% else %}
+            <p>Get started by creating an account or logging in.</p>
+            <!-- FIXED: The links now point to the 'auth' blueprint -->
+            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Log In</a>
+            <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
+        {% endif %}
+    </div>
+{% endblock %}
