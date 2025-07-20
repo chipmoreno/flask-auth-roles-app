@@ -4,6 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from flask_migrate import Migrate
 
 # Initialize extensions but don't attach them to an app yet
 db = SQLAlchemy()
@@ -11,6 +12,8 @@ bcrypt = Bcrypt()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login' # Tells LoginManager where the login route is
 login_manager.login_message_category = 'info' # For better-looking flash messages
+
+migrate = Migrate()
 
 def create_app():
     """Construct the core application."""
@@ -26,8 +29,10 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     login_manager.init_app(app)
-
+    migrate.init_app(app, db)
+    
     with app.app_context():
+        from . import models
         # --- Import and Register Blueprints ---
         # Import parts of our application
         from . import models  # Import models to make sure they are known to SQLAlchemy
@@ -42,6 +47,5 @@ def create_app():
 
         # --- Create Database Tables ---
         # This is okay for development, for production you'd use Flask-Migrate
-        db.create_all()
 
         return app
