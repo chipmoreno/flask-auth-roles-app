@@ -32,10 +32,9 @@ def create_app():
     migrate.init_app(app, db)
     
     with app.app_context():
-        from . import models
-        # --- Import and Register Blueprints ---
-        # Import parts of our application
-        from . import models  # Import models to make sure they are known to SQLAlchemy
+        # Fix: Keep only one 'from . import models' and add 'from .models import Category'
+        from . import models  
+        from .models import Category # <--- ADD THIS IMPORT HERE FOR CATEGORY SEEDING
         
         from .auth.routes import auth_bp
         app.register_blueprint(auth_bp)
@@ -43,9 +42,28 @@ def create_app():
         from .main.routes import main_bp
         app.register_blueprint(main_bp)
 
-        # You could add other blueprints here (e.g., for listings)
+        from app.listings.routes import listings_bp
+        app.register_blueprint(listings_bp)
+
+        # --- NEW: Hardcode/Seed Initial Categories if they don't exist ---
+        if not Category.query.first(): 
+            print("Seeding initial categories...")
+            tech = Category(name='Technology') # REMOVED: description='...'
+            services = Category(name='Services') # REMOVED: description='...'
+            real_estate = Category(name='Real Estate') # REMOVED: description='...'
+            vehicles = Category(name='Vehicles') # REMOVED: description='...'
+            jobs = Category(name='Jobs') # REMOVED: description='...'
+            
+            db.session.add_all([tech, services, real_estate, vehicles, jobs])
+            db.session.commit()
+            print("Initial categories seeded successfully.")
+        else:
+            print("Categories already exist in the database, skipping initial seeding.")
+        # ------------------------------------------------------------------
 
         # --- Create Database Tables ---
         # This is okay for development, for production you'd use Flask-Migrate
+        # Keep this commented if you're using Flask-Migrate to manage your schema
+        # db.create_all() 
 
         return app

@@ -50,43 +50,27 @@ class Category(db.Model):
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
-    
     listings = db.relationship('Listing', backref='category', lazy=True)
 
     def __repr__(self):
         return f'<Category {self.name}>'
 
 class Listing(db.Model):
-    """Listing model for directory entries."""
     __tablename__ = 'listings'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    
-    # Foreign Keys and Relationships
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    author = db.relationship('User', backref='listings', lazy=True) 
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
-    
-    # Core Listing Details
     location = db.Column(db.String(120), nullable=True)
     contact_email = db.Column(db.String(120), nullable=True)
     contact_phone = db.Column(db.String(60), nullable=True)
-    website_url = db.Column(db.String(255), nullable=True)
-    
-    # Financial/Price details
     price = db.Column(db.Float, nullable=True)
-    currency = db.Column(db.String(10), nullable=True, default='USD')
-
-    # Timestamps and Status
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
     status = db.Column(db.String(20), nullable=False, default='published')
-    
-    # Analytics/Popularity
     views_count = db.Column(db.Integer, default=0)
-
-    # Optional: For images.
-    image_url = db.Column(db.String(255), nullable=True) 
-
+    
     def __repr__(self):
         return f'<Listing {self.title} by User {self.user_id}>'

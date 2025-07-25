@@ -22,6 +22,8 @@
                 <!-- Logic to show links based on login status -->
                 {% if current_user.is_authenticated %}
                     <!-- FIXED: The profile link now points to 'main.profile' -->
+                    <a class="nav-item nav-link" href="{{ url_for('listings.new_listing') }}">Create Listings</a>
+                     <a class="nav-item nav-link" href="{{ url_for('listings.all_listings') }}">View Listings</a>
                     <a class="nav-item nav-link" href="{{ url_for('main.profile') }}">Profile</a>
                     <!-- FIXED: The logout link now points to 'auth.logout' -->
                     <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
