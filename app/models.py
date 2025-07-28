@@ -69,7 +69,7 @@ class Listing(db.Model):
     
     # --- Corrected User relationship ---
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) # Refers to 'users.id' table
-    author = db.relationship('User', backref=db.backref('listings', lazy=True)) # 'listings' is the collection on User model
+    author = db.relationship('User', backref=db.backref('listings', lazy='dynamic')) # 'listings' is the collection on User model
 
     # --- Corrected Category relationship ---
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False) # Refers to 'categories.id' table

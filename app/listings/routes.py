@@ -3,15 +3,65 @@
 from flask import Blueprint, abort, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from .forms import ListingForm
-from ..models import Listing, Category, User # Import both models
+from ..models import Listing, Category, User
 from .. import db
+from sqlalchemy import or_ # Make sure or_ is imported!
 
 listings_bp = Blueprint('listings', __name__, url_prefix='/listings')
-@listings_bp.route('/')
+
+# ONLY ONE DEFINITION OF ALL_LISTINGS, WITH SEARCH/FILTER LOGIC
+@listings_bp.route('/') # This makes /listings also show all listings
 @listings_bp.route('/all')
 def all_listings():
-    listings = Listing.query.filter_by(status='published').order_by(Listing.created_at.desc()).all()
-    return render_template('listings/all_listings.html', title='All Listings', listings=listings)
+    query = request.args.get('q', '').strip()
+    category_id = request.args.get('category_id', type=int)
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+
+    # --- Search Debug Information ---
+    print("\n--- Search Debug Information ---")
+    print(f"Received 'q' (keyword query): '{query}'")
+    print(f"Received 'category_id': {category_id}")
+    print(f"Received 'min_price': {min_price}")
+    print(f"Received 'max_price': {max_price}")
+    print("-------------------------------\n")
+    # --- END DEBUG STATEMENTS ---
+
+    listings_query = Listing.query.filter_by(status='published') # Start with published listings
+
+    # Apply search filter if 'q' (keyword query) is provided
+    if query:
+        # CORRECTED SYNTAX: or_ is a function inside filter()
+        listings_query = listings_query.filter(
+            or_(
+                Listing.title.ilike(f'%{query}%'),
+                Listing.description.ilike(f'%{query}%')
+            )
+        )
+    
+    # Apply category filter if category_id is provided
+    if category_id:
+        listings_query = listings_query.filter_by(category_id=category_id)
+    
+    # Apply minimum price filter if min_price is provided
+    if min_price is not None:
+        listings_query = listings_query.filter(Listing.price >= min_price)
+    
+    # Apply maximum price filter if max_price is provided
+    if max_price is not None:
+        listings_query = listings_query.filter(Listing.price <= max_price)
+
+    # Order the results (e.g., by newest first)
+    listings = listings_query.order_by(Listing.created_at.desc()).all()
+
+    # Get all categories for the filter dropdown in the template
+    categories = Category.query.order_by(Category.name).all()
+
+    return render_template('listings/all_listings.html', 
+                           title='All Listings', 
+                           listings=listings, 
+                           categories=categories)
+
 
 @listings_bp.route('/new', methods=['GET', 'POST'])
 @login_required # Only logged-in users can create listings
@@ -43,7 +93,7 @@ def view_listing(listing_id):
     # Optionally increment views count here
     listing.views_count += 1
     db.session.commit()
-    return render_template('listings/view_listing.html', title=listing.title, listing=listing) # Changed to listings/view_listing.html for clarity
+    return render_template('listings/view_listing.html', title=listing.title, listing=listing)
 
 @listings_bp.route('/<int:listing_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -69,7 +119,7 @@ def edit_listing(listing_id):
         listing.price = form.price.data if form.price.data is not None else None
         listing.location = form.location.data
         listing.contact_email = form.contact_email.data
-        listing.contact_phone = form.contact_phone.data
+        listing.contact_phone.data = form.contact_phone.data
 
         db.session.commit()
         flash('Your listing has been updated!', 'success')
