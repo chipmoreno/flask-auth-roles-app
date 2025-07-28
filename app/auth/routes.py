@@ -58,3 +58,10 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
+
+@auth_bp.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    # This is a placeholder. You'll need a form for changing passwords later.
+    flash("Change Password page is under construction!", 'info')
+    return render_template('auth/change_password.html', title='Change Password') # You'd need to create this template

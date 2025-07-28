@@ -20,10 +20,21 @@
             <div class="navbar-nav">
                 {% if current_user.is_authenticated %}
                     <a class="nav-item nav-link" href="{{ url_for('listings.all_listings') }}">View Listings</a>
-                    <a class="nav-item nav-link" href="{{ url_for('listings.new_listing') }}">Create Listing</a>
-                    <a class="nav-link" href="{{ url_for('main.my_listings') }}">My Listings</a>
-                    <a class="nav-item nav-link" href="{{ url_for('main.profile') }}">Profile</a>
-                    <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                    <a class="nav-item btn btn-success text-white ml-2" href="{{ url_for('listings.new_listing') }}">
+                        ✨ Create Listing
+                    </a>                    <a class="nav-link" href="{{ url_for('main.my_listings') }}">My Listings</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProfile" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{ current_user.username }}'s Profile
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownProfile">
+                            <a class="dropdown-item" href="{{ url_for('main.my_listings') }}">My Posts</a> {# Already exists #}
+                            <a class="dropdown-item" href="{{ url_for('users.edit_profile') }}">Edit Profile</a> {# Needs users.edit_profile route #}
+                            <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">Change Password</a> {# Needs auth.change_password route #}
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </div>
+                    </li>
                 {% else %}
                     <a class="nav-item nav-link" href="{{ url_for('auth.login') }}">Login</a>
                     <a class="nav-item nav-link" href="{{ url_for('auth.register') }}">Register</a>
@@ -57,6 +68,8 @@
             </div>
         </div>
     </main>
-
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>

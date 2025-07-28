@@ -13,29 +13,17 @@ listings_bp = Blueprint('listings', __name__, url_prefix='/listings')
 @listings_bp.route('/') # This makes /listings also show all listings
 @listings_bp.route('/all')
 def all_listings():
-    # Get pagination parameters from the URL (default to page 1)
     page = request.args.get('page', 1, type=int)
-    # Define how many listings per page. You can configure this in config.py if you want:
-    # per_page = current_app.config.get('LISTINGS_PER_PAGE', 12)
-    per_page = 12 # For now, let's hardcode 12 listings per page
+    per_page = 12
 
-    # Get existing search/filter query parameters
     query = request.args.get('q', '').strip()
     category_id = request.args.get('category_id', type=int)
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
 
-    # --- Search Debug Information (Keep this for now if you like) ---
-    print("\n--- Search Debug Information ---")
-    print(f"Received 'q' (keyword query): '{query}'")
-    print(f"Received 'category_id': {category_id}")
-    print(f"Received 'min_price': {min_price}")
-    print(f"Received 'max_price': {max_price}")
-    print(f"Requested Page: {page}, Per Page: {per_page}") # New debug info
-    print("-------------------------------\n")
-    # --- END DEBUG STATEMENTS ---
+    # ... (keep your print statements for debugging) ...
 
-    listings_query = Listing.query.filter_by(status='published') # Start with published listings
+    listings_query = Listing.query.filter_by(status='published')
 
     # Apply search filter if 'q' (keyword query) is provided
     if query:
@@ -58,25 +46,25 @@ def all_listings():
     if max_price is not None:
         listings_query = listings_query.filter(Listing.price <= max_price)
 
-    # Order the results (e.g., by newest first)
-    # Apply pagination *after* all filters and ordering
-    paginated_listings = listings_query.order_by(Listing.created_at.desc()).paginate(
+    # --- MODIFIED ORDERING: Sponsored first, then by creation date ---
+    paginated_listings = listings_query.order_by(
+        Listing.is_sponsored.desc(), # True (1) comes before False (0)
+        Listing.created_at.desc()
+    ).paginate(
         page=page,
         per_page=per_page,
-        error_out=False # Set to False to return an empty list if page is out of range
+        error_out=False
     )
+    # -----------------------------------------------------------------
 
-    listings = paginated_listings.items # Get the actual listings for the current page
-
-    # Get all categories for the filter dropdown in the template
+    listings = paginated_listings.items
     categories = Category.query.order_by(Category.name).all()
 
     return render_template('listings/all_listings.html', 
                            title='All Listings', 
-                           listings=listings,           # These are the listings for the current page
+                           listings=listings,
                            categories=categories,
-                           pagination=paginated_listings) # Pass the pagination object to the template
-
+                           pagination=paginated_listings)
 
 @listings_bp.route('/new', methods=['GET', 'POST'])
 @login_required # Only logged-in users can create listings

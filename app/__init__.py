@@ -1,6 +1,6 @@
 # app/__init__.py
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -35,13 +35,14 @@ def create_app():
         # Fix: Keep only one 'from . import models' and add 'from .models import Category'
         from . import models  
         from .models import Category # <--- ADD THIS IMPORT HERE FOR CATEGORY SEEDING
-        
+        from app.users.routes import users_bp
+        app.register_blueprint(users_bp)    
         from .auth.routes import auth_bp
         app.register_blueprint(auth_bp)
 
         from .main.routes import main_bp
         app.register_blueprint(main_bp)
-
+        
         from app.listings.routes import listings_bp
         app.register_blueprint(listings_bp)
 
@@ -65,5 +66,17 @@ def create_app():
         # This is okay for development, for production you'd use Flask-Migrate
         # Keep this commented if you're using Flask-Migrate to manage your schema
         # db.create_all() 
+
+
+        # --- CUSTOM ERROR HANDLERS START ---
+        @app.errorhandler(404) # <--- ADDED THIS MISSING DECORATOR!
+        def not_found_error(error):
+            # When an error occurs, Flask passes the error object as an argument
+            return render_template('errors/404.html'), 404 # Return template and status code
+
+        @app.errorhandler(403)
+        def forbidden_error(error):
+            return render_template('errors/403.html'), 403
+        # --- CUSTOM ERROR HANDLERS END ---
 
         return app

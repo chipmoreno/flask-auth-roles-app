@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db, login_manager
 from datetime import datetime # Import datetime for default timestamps if not using db.func.now()
+from sqlalchemy_serializer import SerializerMixin # For easy serialization if needed later
 
 # Flask-Login user_loader function
 @login_manager.user_loader
@@ -85,6 +86,7 @@ class Listing(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
     status = db.Column(db.String(20), nullable=False, default='published')
     views_count = db.Column(db.Integer, default=0)
+    is_sponsored = db.Column(db.Boolean, default=False, nullable=False)
     
     def __repr__(self):
         return f'<Listing {self.title} by User {self.user_id}>'
