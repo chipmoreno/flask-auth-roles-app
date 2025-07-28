@@ -1,6 +1,6 @@
 # app/listings/routes.py
 
-from flask import Blueprint, abort, render_template, redirect, url_for, flash, request
+from flask import Blueprint, abort, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from .forms import ListingForm
 from ..models import Listing, Category, User
@@ -13,17 +13,25 @@ listings_bp = Blueprint('listings', __name__, url_prefix='/listings')
 @listings_bp.route('/') # This makes /listings also show all listings
 @listings_bp.route('/all')
 def all_listings():
+    # Get pagination parameters from the URL (default to page 1)
+    page = request.args.get('page', 1, type=int)
+    # Define how many listings per page. You can configure this in config.py if you want:
+    # per_page = current_app.config.get('LISTINGS_PER_PAGE', 12)
+    per_page = 12 # For now, let's hardcode 12 listings per page
+
+    # Get existing search/filter query parameters
     query = request.args.get('q', '').strip()
     category_id = request.args.get('category_id', type=int)
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
 
-    # --- Search Debug Information ---
+    # --- Search Debug Information (Keep this for now if you like) ---
     print("\n--- Search Debug Information ---")
     print(f"Received 'q' (keyword query): '{query}'")
     print(f"Received 'category_id': {category_id}")
     print(f"Received 'min_price': {min_price}")
     print(f"Received 'max_price': {max_price}")
+    print(f"Requested Page: {page}, Per Page: {per_page}") # New debug info
     print("-------------------------------\n")
     # --- END DEBUG STATEMENTS ---
 
@@ -31,36 +39,43 @@ def all_listings():
 
     # Apply search filter if 'q' (keyword query) is provided
     if query:
-        # CORRECTED SYNTAX: or_ is a function inside filter()
         listings_query = listings_query.filter(
             or_(
                 Listing.title.ilike(f'%{query}%'),
                 Listing.description.ilike(f'%{query}%')
             )
         )
-    
+
     # Apply category filter if category_id is provided
     if category_id:
         listings_query = listings_query.filter_by(category_id=category_id)
-    
+
     # Apply minimum price filter if min_price is provided
     if min_price is not None:
         listings_query = listings_query.filter(Listing.price >= min_price)
-    
+
     # Apply maximum price filter if max_price is provided
     if max_price is not None:
         listings_query = listings_query.filter(Listing.price <= max_price)
 
     # Order the results (e.g., by newest first)
-    listings = listings_query.order_by(Listing.created_at.desc()).all()
+    # Apply pagination *after* all filters and ordering
+    paginated_listings = listings_query.order_by(Listing.created_at.desc()).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False # Set to False to return an empty list if page is out of range
+    )
+
+    listings = paginated_listings.items # Get the actual listings for the current page
 
     # Get all categories for the filter dropdown in the template
     categories = Category.query.order_by(Category.name).all()
 
     return render_template('listings/all_listings.html', 
                            title='All Listings', 
-                           listings=listings, 
-                           categories=categories)
+                           listings=listings,           # These are the listings for the current page
+                           categories=categories,
+                           pagination=paginated_listings) # Pass the pagination object to the template
 
 
 @listings_bp.route('/new', methods=['GET', 'POST'])
